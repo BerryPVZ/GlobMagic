@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Interactive Glob Maker</title>
+  <link rel="icon" href="GlobbertIcon.webp" />
+  <style>
+    :root{
+      --bg0:#070807;
+      --bg1:#11140e;
+      --panel:#191d16cc;
+      --panel2:#24291fcc;
+      --edge:#3d4634;
+      --text:#f0eed8;
+      --muted:#aaa784;
+      --button:#d6c86a;
+      --buttonText:#1b1a0d;
+      --danger:#d6976a;
+      --shadow:rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+    html,body{margin:0; min-height:100%; background:radial-gradient(circle at 50% 0%, #202713 0%, var(--bg0) 55%, #000 100%); color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; overflow-x:hidden;}
+    body{display:flex; justify-content:center; padding:14px;}
+    .wrap{width:min(1180px,100%); display:grid; grid-template-columns:minmax(0, 1fr) 330px; gap:14px; align-items:start;}
+    header{grid-column:1/-1; display:flex; align-items:end; justify-content:space-between; gap:12px; padding:8px 4px 0;}
+    h1{font-size:clamp(28px,5vw,54px); line-height:.9; margin:0; letter-spacing:-1px; text-shadow:0 5px 18px #000;}
+    .tagline{margin:6px 0 0; color:var(--muted); font-size:14px;}
+    .stage{position:relative; background:#020302; border:1px solid #252b1d; border-radius:28px; box-shadow:0 22px 60px var(--shadow), inset 0 0 0 1px rgba(255,255,255,.04); overflow:hidden; min-height:520px; touch-action:none;}
+    canvas{display:block; width:100%; height:auto; max-height:78vh; background:radial-gradient(circle at 50% 42%, #11160d 0%, #050604 65%, #000 100%); cursor:pointer;}
+    .hint{position:absolute; left:16px; bottom:14px; right:16px; display:flex; justify-content:space-between; align-items:center; gap:10px; pointer-events:none; color:#d7d2a3; opacity:.72; font-size:13px; text-shadow:0 2px 5px #000;}
+    .bubble{position:absolute; left:50%; top:22px; transform:translateX(-50%) scale(.96); background:#11170dcc; color:#f5edc3; border:1px solid #425234; border-radius:999px; padding:8px 14px; box-shadow:0 10px 25px rgba(0,0,0,.35); opacity:0; transition:opacity .18s, transform .18s; pointer-events:none; max-width:90%; text-align:center;}
+    .bubble.show{opacity:1; transform:translateX(-50%) scale(1);}
+    .panel{background:linear-gradient(180deg, var(--panel), #10130dcc); border:1px solid var(--edge); border-radius:24px; padding:14px; box-shadow:0 16px 42px var(--shadow), inset 0 0 0 1px rgba(255,255,255,.04);}
+    .panel h2{margin:0 0 12px; font-size:19px;}
+    label{display:block; margin:11px 0 6px; color:#d4d0a3; font-size:13px; font-weight:700;}
+    input,select,button{font:inherit;}
+    input,select{width:100%; border:1px solid #49513a; background:#0e110d; color:var(--text); border-radius:14px; padding:11px 12px; outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+    input:focus,select:focus{border-color:#c5bd64; box-shadow:0 0 0 3px rgba(214,200,106,.14);}
+    .row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;}
+    .actions{display:grid; gap:9px; margin-top:13px;}
+    button{border:0; border-radius:16px; padding:12px 13px; font-weight:800; color:var(--buttonText); background:linear-gradient(180deg, #f0dd72, var(--button)); box-shadow:0 7px 0 #817537, 0 16px 28px rgba(0,0,0,.28); cursor:pointer; transition:transform .08s, box-shadow .08s, filter .1s;}
+    button:active{transform:translateY(5px); box-shadow:0 2px 0 #817537, 0 8px 18px rgba(0,0,0,.25);}
+    button.secondary{background:linear-gradient(180deg, #d3d7c3, #929b82); box-shadow:0 7px 0 #565d4d, 0 16px 28px rgba(0,0,0,.28);}
+    button.danger{background:linear-gradient(180deg, #ebb289, var(--danger)); box-shadow:0 7px 0 #81533d, 0 16px 28px rgba(0,0,0,.28);}
+    .card{margin-top:13px; background:linear-gradient(180deg, var(--panel2), #11150fcc); border:1px solid #38412f; border-radius:20px; padding:13px;}
+    .name{font-size:28px; line-height:1; font-weight:950; letter-spacing:-.6px; margin:2px 0 8px; word-break:break-word;}
+    .sub{color:var(--muted); font-size:13px; line-height:1.35;}
+    .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
+    .chip{font-size:12px; color:#f7f1c7; background:#2c3424; border:1px solid #49543e; border-radius:999px; padding:6px 8px;}
+    .mini{font-size:12px; color:#9c9879; line-height:1.4; margin-top:10px;}
+    .collection{display:grid; gap:7px; margin-top:10px; max-height:190px; overflow:auto; padding-right:4px;}
+    .saved{display:flex; align-items:center; justify-content:space-between; gap:8px; background:#10150d; border:1px solid #303926; border-radius:14px; padding:8px 9px; color:#ddd6aa; font-size:13px;}
+    .swatch{width:20px; height:20px; border-radius:8px; border:1px solid rgba(255,255,255,.28); flex:none;}
+    .saved span:nth-child(2){flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .iconBtn{padding:5px 8px; border-radius:10px; box-shadow:none; font-size:12px; background:#2e3527; color:#ece7bf;}
+    .noshow{display:none !important;}
+    @media (max-width:860px){
+      body{padding:10px;}
+      .wrap{grid-template-columns:1fr;}
+      header{display:block;}
+      .stage{min-height:0;}
+      canvas{max-height:none;}
+      .row{grid-template-columns:1fr 1fr;}
+      .row .fullSmall{grid-column:1/-1;}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>Interactive Glob Maker</h1>
+        <p class="tagline">Type in a birthday. It spits out a personal, weird, sleepy glob.</p>
+      </div>
+    </header>
+
+    <section class="stage" aria-label="Generated glob stage">
+      <canvas id="globCanvas" width="900" height="680"></canvas>
+      <audio id="tapSfx" src="glob_poke.wav" preload="auto"></audio>
+      <div id="speech" class="bubble">brrrp.</div>
+      <div class="hint"><span>Tap / click the glob to annoy it.</span><span id="loadNote">loading names…</span></div>
+    </section>
+
+    <aside class="panel">
+      <h2>Birth goo recipe</h2>
+      <div class="row">
+        <div>
+          <label for="year">Year</label>
+          <input id="year" type="text" inputmode="text" autocomplete="off" spellcheck="false" value="2011" placeholder="2011, 200 BC, 5000 BCE" />
+        </div>
+        <div>
+          <label for="month">Month</label>
+          <select id="month">
+            <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option>
+            <option value="5">May</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Aug</option>
+            <option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+        </div>
+        <div class="fullSmall">
+          <label for="day">Day</label>
+          <input id="day" type="number" inputmode="numeric" min="1" max="31" value="1" />
+        </div>
+      </div>
+      <label for="gender">Gender/name style</label>
+      <select id="gender">
+        <option value="random">Random from birthday</option>
+        <option value="male">Male list</option>
+        <option value="female">Female list</option>
+      </select>
+      <div class="actions">
+        <button id="makeBtn">Generate my glob</button>
+        <button id="regenBtn" class="secondary">Regenerate glob</button>
+        <button id="pngBtn" class="secondary">Download PNG</button>
+        <button id="saveBtn" class="secondary">Save to collection</button>
+      </div>
+
+      <div class="card" aria-live="polite">
+        <div class="sub">Your glob is named</div>
+        <div id="globName" class="name">...</div>
+        <div id="globBio" class="sub">Waiting for the name sludge to warm up.</div>
+        <div id="globChips" class="chips"></div>
+      </div>
+
+      <div class="card">
+        <div class="sub">Saved globs</div>
+        <div id="collection" class="collection"></div>
+        <div class="actions" style="margin-top:10px">
+          <button id="clearBtn" class="danger">Clear collection</button>
+        </div>
+        <p class="mini">The name files stay hidden. Put this HTML beside <b>slime_names.json</b> or the three .txt name files and it will read them automatically. Put a custom <b>glob_poke.wav</b> in the same folder to change the tap sound. Years can be regular, AD/CE, or ancient like <b>200 BC</b>. Use <b>Regenerate glob</b> to reroll the same birthday into a different color, face, and name. On browsers that block local file reads, it uses the same lists baked in as a backup.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+  'use strict';
+
+  const EMBEDDED_NAMES = {"first_female": ["Anablop", "Bloopella", "Blopbela", "Blopbelle", "Bloppina", "Bub", "Bubbles", "Bubblette", "Bubbli", "Bubblia", "Bubbly", "Fizzaria", "Fizzete", "Fizzian", "Fizzina", "Fizzney", "Fizzy", "Flubbelyn", "Flubbney", "Flubbzina", "Gelinda", "Gelletina", "Gellina", "Gooenna", "Gooescari", "Goolinda", "Isabloppa", "Jelibelle", "Jellai", "Jellei", "Jellenna", "Jellette", "Jelli", "Jellianne", "Jellica", "Jellina", "Jelly", "Jiggly", "Marmalade", "Murkella", "Murkina", "Oozella", "Oozerina", "Oozina", "Pipoppy", "Pippop", "Popiline", "Popilla", "Popparia", "Poppaya", "Poppella", "Poppet", "Poppi", "Poppla", "Poppurina", "Poppy", "Skishella", "Skishelly", "Skishly", "Skuishi", "Skweesha", "Skwishly", "Slush", "Slusharia", "Slushi", "Slushia", "Slushibell", "Slushie", "Slushy", "Squisha", "Squishie", "Squishlee", "Bloppella"], "first_male": ["Blip", "Blobbert", "Blobbin", "Blobbo", "Blobby", "Bloop", "Bloopary", "Bloopin", "Bloopy", "Blooui", "Blop", "Blopary", "Bloppard", "Bloppino", "Bloppy", "Blorb", "Blorble", "Blubb", "Blubble", "Blubby", "Blup", "Bluppary", "Blurbin", "Blurbington", "Blurble", "Blurbo", "Blurby", "Bog", "Boggley", "Boggs", "Bop", "Bubblin", "Bubblinton", "Bubby", "Bubobu", "Driblet", "Elgen", "Fizzard", "Fizzmore", "Fizzo", "Fizzrick", "Flan", "Gammy", "Gel", "Gelardo", "Gelert", "Geley", "Gellard", "Gellbert", "Gelly", "Gill", "Globbert", "Globbin", "Globblino", "Globbly", "Globbo", "Globu", "Globule", "Globuli", "Gloob", "Gloobert", "Glooby", "Glooppins", "Gloopy", "Glopp", "Glorb", "Glorby", "Glorg", "Glu", "Glub", "Glubb", "Glubbert", "Glubble", "Glubblee", "Gluen", "Glug", "Glugg", "Gluggen", "Gluggy", "Goo", "Goober", "Goobly", "Gooffy", "Goomie", "Goop", "Gooverl", "Grime", "Gumbo", "Gummi", "Jaeli", "Jammy", "Jelert", "Jeley", "Jellard", "Jellardo", "Jellbert", "Jellberto", "Jelleno", "Jellert", "Jellimillian", "Jiggle", "Jolly", "Lime", "Mooze", "Muckey", "Muckle", "Muckus", "Mucus", "Mucy", "Muk", "Murk", "Murkello", "Murkey", "Murkle", "Ooey", "Ooul", "Oouzen", "Oozellin", "Oozelus", "Oozeroth", "Oozeroy", "Oozey", "Oozi", "Oozinth", "Oozish", "Oozuik", "Oozuish", "Oozy", "Pipop", "Pipoulp", "Plip", "Ploop", "Plop", "Plopp", "Plopponu", "Pop", "Popou", "Poppello", "Poppeth", "Poppilor", "Poppin", "Popplin", "Poulp", "Pudd", "Pupp", "Shimmy", "Skwickey", "Slimedo", "Slimero", "Slimeton", "Slimey", "Sloosh", "Slop", "Slosh", "Sludge", "Slush", "Smidgen", "Smudge", "Sploth", "Spritz", "Squan", "Squeshelon", "Squishan", "Squishard", "Squishary", "Squishen", "Squishendo", "Squishie", "Squiship", "Squishiro", "Squishu", "Squishul", "Squorsh", "Uoulp", "Uulpop", "Wibble", "Wobble"], "last": ["Agua", "Aquafreda", "Aquati", "Aquino", "Blobbe", "Bloop", "Blooper", "Bloopert", "Blooupep", "Blopbel", "Blopphill", "Bloppins", "Blopplopindale", "Blopson", "Blopthorne", "Blubb", "Blubbins", "Bop", "Boppopi", "Bubblect", "Bubblins", "Bubblinz", "Cotta", "Fizz", "Fizzblep", "Fizzen", "Fizzerbei", "Fizzino", "Fizzland", "Fizzle", "Fizzy", "Flan", "Flanchett", "Flopple", "Flubb", "Gelatino", "Gelatio", "Gelato", "Gelburt", "Gellin", "Globbins", "Gloopens", "Gloopinspur", "Gloppashup", "Glubb", "Glurggins", "Gooburry", "Goociall", "Goodatrad", "Gooey", "Googrim", "Gooper", "Goosippi", "Goovue", "Jellato", "Jellimore", "Jellins", "Jellipop", "Jelliton", "Jellyne", "McBlurp", "McBubbly", "McSquish", "Murkmire", "Ooze", "Oozellin", "Oozenslu", "Oozer", "Oozettle", "Oozeusur", "Oozlin", "Plip", "Plipoporia", "Plipoporio", "Plipperson", "Plopp", "Plopperville", "Ploppington", "Ploppler", "Po'Popply", "Po'Skish", "Poole", "Pop", "Pop'Oporo", "Pop'Skwish", "Pop-Poppins", "Popblopkin", "Popidin", "Popin", "Popkupup", "Poplaw", "Poplawski", "Popp", "Poppatrek", "Poppins", "Popply", "Popps", "Popresoli", "Popthorne", "Rivers", "Skweeshera", "Skwesh", "Skwiop", "Skwish", "Slimeson", "Sludgemore", "Slush", "Slusher", "Slushery", "Slushey", "Slushi", "Slushington", "Slushino", "Slushins", "Sploot", "Splooten", "Squish", "Squishad", "Squisharo", "Squisherson", "Squishington", "Squishino", "Squishinpop", "Squishins", "Squishmire", "Squishon", "Squisshins", "Waterman", "Waters"]};
+  let nameBank = { ...EMBEDDED_NAMES };
+  let currentGlob = null;
+  let regenerateSalt = 0;
+  let pointer = { x: 0, y: 0, active: false };
+  let pokePower = 0;
+  let lastTime = performance.now();
+
+  const canvas = document.getElementById('globCanvas');
+  const ctx = canvas.getContext('2d');
+  const elYear = document.getElementById('year');
+  const elMonth = document.getElementById('month');
+  const elDay = document.getElementById('day');
+  const elGender = document.getElementById('gender');
+  const elName = document.getElementById('globName');
+  const elBio = document.getElementById('globBio');
+  const elChips = document.getElementById('globChips');
+  const elSpeech = document.getElementById('speech');
+  const elCollection = document.getElementById('collection');
+  const elLoadNote = document.getElementById('loadNote');
+  const tapAudio = document.getElementById('tapSfx');
+  const SFX_FILE = 'glob_poke.wav';
+  const sfxPool = [];
+  let sfxIndex = 0;
+  let lastPokeAt = 0;
+
+  const TRAITS_A = ['Sleepy','Lumpy','Sour','Mossy','Drowsy','Rubbery','Grumpy','Gloopy','Wobbly','Stale','Squishy','Drippy','Mumbly','Dank','Pudgy','Waxy','Soggy','Dizzy'];
+  const TRAITS_B = ['Stare','Wiggle','Mutter','Plop','Slump','Blink','Grub','Glob','Burp','Mope','Squelch','Droop','Poke','Mold','Nub','Blob','Tooth','Murk'];
+  const QUIPS = ['hmph.', 'blrrp.', 'stop that.', 'i was blinking.', 'glob noises.', 'absolutely not.', 'squish.', 'do not perceive me.', 'mrrg.', 'fine.'];
+
+  function parseNameText(text){
+    return String(text || '')
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  async function fetchTextFile(path){
+    const res = await fetch(path, { cache: 'no-store' });
+    if(!res.ok) throw new Error(path + ' returned ' + res.status);
+    return await res.text();
+  }
+
+  async function loadNameBank(){
+    try{
+      const res = await fetch('slime_names.json', { cache: 'no-store' });
+      if(!res.ok) throw new Error('json not found');
+      const json = await res.json();
+      if(Array.isArray(json.first_male) && Array.isArray(json.first_female) && Array.isArray(json.last)){
+        nameBank = {
+          first_male: json.first_male.filter(Boolean),
+          first_female: json.first_female.filter(Boolean),
+          last: json.last.filter(Boolean)
+        };
+        elLoadNote.textContent = 'name files loaded';
+        return;
+      }
+      throw new Error('bad json shape');
+    }catch(jsonErr){
+      try{
+        const [male, female, last] = await Promise.all([
+          fetchTextFile('first_male_slime.txt'),
+          fetchTextFile('first_female_slime.txt'),
+          fetchTextFile('last_slime.txt')
+        ]);
+        nameBank = {
+          first_male: parseNameText(male),
+          first_female: parseNameText(female),
+          last: parseNameText(last)
+        };
+        elLoadNote.textContent = 'name files loaded';
+      }catch(txtErr){
+        nameBank = { ...EMBEDDED_NAMES };
+        elLoadNote.textContent = 'using built-in backup names';
+      }
+    }
+  }
+
+  function xmur3(str){
+    let h = 1779033703 ^ str.length;
+    for(let i=0; i<str.length; i++){
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return function(){
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      return (h ^= h >>> 16) >>> 0;
+    };
+  }
+
+  function mulberry32(a){
+    return function(){
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+  function choice(arr, rng){ return arr[Math.floor(rng() * arr.length) % arr.length]; }
+  function hsl(h,s,l){ return `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`; }
+  function hsla(h,s,l,a){ return `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}% / ${a})`; }
+  function shade(color, delta){ return hsl(color.h, color.s, clamp(color.l + delta, 0, 100)); }
+
+  function modBig(n, d){
+    return ((n % d) + d) % d;
+  }
+
+  function formatBigYear(n){
+    const s = n.toString();
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function formatBigAge(ageBig){
+    if(ageBig < 0n) return 'not born yet';
+    if(ageBig > 999999999999n) return 'absurdly ancient';
+    if(ageBig > 999999n) return formatBigYear(ageBig) + ' years old';
+    const n = Number(ageBig);
+    if(n === 0) return 'newborn';
+    if(n === 1) return '1 year old';
+    return n + ' years old';
+  }
+
+  function cleanYearText(){
+    const raw = String(elYear.value || '').trim().replace(/\s+/g, ' ');
+    return raw || '2011';
+  }
+
+  function parseYearInput(){
+    const raw = cleanYearText();
+    const upper = raw.toUpperCase().replace(/[.]/g, '');
+    const match = upper.match(/([+-]?\d[\d,]*)/);
+    if(!match){
+      const hash = xmur3(raw)();
+      const fakeYear = BigInt((hash % 6000) - 3000);
+      return {
+        raw,
+        display: raw,
+        seed: raw,
+        yearBig: fakeYear,
+        knownNumber: false,
+        era: 'custom'
+      };
+    }
+
+    const digits = match[1].replace(/,/g, '');
+    let yearBig;
+    try{
+      yearBig = BigInt(digits);
+    }catch(err){
+      yearBig = 2011n;
+    }
+    const isNegative = yearBig < 0n;
+    const abs = isNegative ? -yearBig : yearBig;
+    const isBC = /\bB\s*C\b|\bBCE\b|BEFORE\s+CHRIST/.test(upper);
+    const isAD = /\bA\s*D\b|\bCE\b/.test(upper);
+
+    let display;
+    let seed;
+    let era = 'plain';
+    if(isBC){
+      const safeAbs = abs === 0n ? 1n : abs;
+      yearBig = 1n - safeAbs;
+      display = formatBigYear(safeAbs) + ' BC';
+      seed = display;
+      era = 'BC';
+    }else if(isAD){
+      const safeAbs = abs === 0n ? 1n : abs;
+      yearBig = safeAbs;
+      display = formatBigYear(safeAbs) + ' AD';
+      seed = display;
+      era = 'AD';
+    }else{
+      display = formatBigYear(yearBig);
+      seed = raw;
+      era = isNegative ? 'negative' : 'plain';
+    }
+
+    return { raw, display, seed, yearBig, knownNumber: true, era };
+  }
+
+  function isLeapYearBig(y){
+    if(modBig(y, 400n) === 0n) return true;
+    if(modBig(y, 100n) === 0n) return false;
+    return modBig(y, 4n) === 0n;
+  }
+
+  function daysInMonth(m, yearInfo){
+    if([1,3,5,7,8,10,12].includes(m)) return 31;
+    if([4,6,9,11].includes(m)) return 30;
+    return isLeapYearBig(yearInfo.yearBig) ? 29 : 28;
+  }
+
+  function normalizedDate(){
+    const yearInfo = parseYearInput();
+    const m = clamp(parseInt(elMonth.value, 10) || 1, 1, 12);
+    const maxDay = daysInMonth(m, yearInfo);
+    const d = clamp(parseInt(elDay.value, 10) || 1, 1, maxDay);
+    elYear.value = yearInfo.raw;
+    elMonth.value = m;
+    elDay.value = d;
+    return { y: yearInfo.raw, yearInfo, m, d, maxDay };
+  }
+
+  function selectedGender(){
+    const value = elGender && elGender.value ? elGender.value : 'random';
+    return ['male','female','random'].includes(value) ? value : 'random';
+  }
+
+  function ageInfoFromDate(yearInfo, m, d){
+    const now = new Date();
+    let ageBig = BigInt(now.getFullYear()) - yearInfo.yearBig;
+    const currentMonth = now.getMonth() + 1;
+    const birthdayPassed = currentMonth > m || (currentMonth === m && now.getDate() >= d);
+    if(!birthdayPassed) ageBig--;
+    const ageScore = ageBig < 0n ? -1 : ageBig > 200n ? 200 : Number(ageBig);
+    return {
+      ageBig,
+      score: ageScore,
+      label: formatBigAge(ageBig)
+    };
+  }
+
+  function eyelidForAge(age, rng){
+    if(age >= 140) return .68 + rng() * .15;
+    if(age >= 110) return .58 + rng() * .18;
+    if(age >= 90) return .46 + rng() * .18;
+    if(age >= 80) return .30 + rng() * .12;
+    if(age >= 70) return .18 + rng() * .10;
+    return .03 + rng() * .09;
+  }
+
+  function makeGlob(){
+    const { y, yearInfo, m, d } = normalizedDate();
+    const genderChoice = selectedGender();
+    const variant = Math.max(0, Math.floor(Number(regenerateSalt) || 0));
+    regenerateSalt = variant;
+    const seedString = `${yearInfo.seed}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}-${genderChoice}-v${variant}`;
+    const seed = xmur3(seedString)();
+    const rng = mulberry32(seed);
+    const ageInfo = ageInfoFromDate(yearInfo, m, d);
+    const ageYears = ageInfo.score;
+
+    let nameStyle;
+    if(genderChoice === 'male') nameStyle = 'first_male';
+    else if(genderChoice === 'female') nameStyle = 'first_female';
+    else nameStyle = rng() > .48 ? 'first_male' : 'first_female';
+    const fallbackFirst = nameStyle === 'first_female' ? EMBEDDED_NAMES.first_female : EMBEDDED_NAMES.first_male;
+    const first = choice(nameBank[nameStyle] && nameBank[nameStyle].length ? nameBank[nameStyle] : fallbackFirst, rng);
+    const last = choice(nameBank.last && nameBank.last.length ? nameBank.last : EMBEDDED_NAMES.last, rng);
+
+    const hue = Math.floor((rng() * 360 + m * 31 + d * 13) % 360);
+    const sat = 38 + Math.floor(rng() * 28);
+    const light = 37 + Math.floor(rng() * 18);
+    const body = {
+      h: hue,
+      s: sat,
+      l: light,
+      base: hsl(hue, sat, light),
+      hi: hsl(hue, Math.max(25, sat - 10), clamp(light + 16, 0, 86)),
+      shadow: hsl(hue, Math.min(75, sat + 8), clamp(light - 18, 0, 45)),
+      dark: hsl(hue, Math.min(75, sat + 12), clamp(light - 28, 0, 35)),
+      ghost: hsla(hue, sat, clamp(light + 22,0,90), .13)
+    };
+
+    const texture = [];
+    for(let i=0;i<26;i++){
+      texture.push({
+        x: rng(), y: rng(), w: .18 + rng()*.52, curve: rng(), a: .035 + rng()*.055, rot: (rng()-.5)*.55
+      });
+    }
+
+    const glob = {
+      seed, seedString, rngMark: rng(),
+      variant,
+      name: `${first} ${last}`,
+      dateLabel: `${m}/${d}/${yearInfo.display}`,
+      yearText: y,
+      yearDisplay: yearInfo.display,
+      ageLabel: ageInfo.label,
+      genderChoice,
+      nameStyle,
+      ageYears,
+      color: body,
+      hue, sat, light,
+      face: Math.floor(rng()*8),
+      mouth: Math.floor(rng()*7),
+      eyeGap: 74 + rng()*38,
+      eyeW: 66 + rng()*22,
+      eyeH: 36 + rng()*12,
+      eyelid: eyelidForAge(ageYears, rng),
+      pupilSize: 8 + rng()*6,
+      bodyW: 350 + rng()*70,
+      bodyH: 390 + rng()*70,
+      dome: .74 + rng()*.18,
+      armLength: .78 + rng()*.25,
+      handStyle: Math.floor(rng()*3),
+      tooth: rng() > .28,
+      tooth2: rng() > .72,
+      wrinkle: 5 + Math.floor(rng()*7),
+      texture,
+      traits: [choice(TRAITS_A, rng), choice(TRAITS_B, rng)],
+      mood: choice(['barely awake','politely annoyed','softly judgmental','full of suspicious jelly','too tired to explain','born to sit there','looking through you','quietly fermenting'], rng),
+      wobbleSpeed: .85 + rng()*1.2,
+      lean: (rng()-.5)*.12,
+      eyeYShift: (rng()-.5)*10
+    };
+
+    currentGlob = glob;
+    pokePower = .4;
+    updateInfo();
+    return glob;
+  }
+
+  function updateInfo(){
+    if(!currentGlob) return;
+    elName.textContent = currentGlob.name;
+    elBio.textContent = `Born from ${currentGlob.dateLabel}. Age: ${currentGlob.ageLabel}. This one is ${currentGlob.mood}.`;
+    elChips.innerHTML = '';
+    const genderChip = currentGlob.nameStyle === 'first_female' ? 'Female name list' : 'Male name list';
+    const variantChip = currentGlob.variant ? `Variant ${currentGlob.variant + 1}` : 'Base variant';
+    const ageChip = currentGlob.ageYears >= 140 ? 'Fossil lids' : currentGlob.ageYears >= 90 ? 'Ancient lids' : currentGlob.ageYears >= 70 ? 'Older lids' : currentGlob.ageYears < 0 ? 'Future glob' : 'Clear eyes';
+    const chipData = [...currentGlob.traits, genderChip, variantChip, ageChip, `Face ${currentGlob.face + 1}`, `Color ${Math.round(currentGlob.hue)}°`];
+    for(const text of chipData){
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = text;
+      elChips.appendChild(chip);
+    }
+  }
+
+  function roundedRect(ctx,x,y,w,h,r){
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawArm(side, cx, cy, w, h, color, t, glob){
+    const sign = side === 'left' ? -1 : 1;
+    const shoulderX = cx + sign * w * .43;
+    const shoulderY = cy + h * .14;
+    const elbowX = cx + sign * w * (.56 + .05*Math.sin(t*1.5 + glob.seed));
+    const elbowY = cy + h * (.38 + .04*Math.cos(t + glob.seed));
+    const handX = cx + sign * w * (.55 + .05 * glob.armLength);
+    const handY = cy + h * (.61 + .03*Math.sin(t*2 + side.length));
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(0,0,0,.35)';
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = color.shadow;
+    ctx.lineWidth = 27;
+    ctx.beginPath();
+    ctx.moveTo(shoulderX, shoulderY);
+    ctx.quadraticCurveTo(elbowX, elbowY, handX, handY);
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = shade(color, 2);
+    ctx.lineWidth = 17;
+    ctx.beginPath();
+    ctx.moveTo(shoulderX, shoulderY);
+    ctx.quadraticCurveTo(elbowX, elbowY, handX, handY);
+    ctx.stroke();
+
+    ctx.strokeStyle = color.dark;
+    ctx.lineWidth = 5;
+    const fingers = glob.handStyle === 0 ? 3 : 2;
+    for(let i=0;i<fingers;i++){
+      const off = (i - (fingers-1)/2) * 8;
+      ctx.beginPath();
+      ctx.moveTo(handX + sign*2, handY + off*.2);
+      ctx.lineTo(handX + sign*(18 + i*2), handY + 12 + off);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function bodyPath(ctx, cx, cy, w, h, squish, lean){
+    const top = cy - h*.50;
+    const bottom = cy + h*.46;
+    const left = cx - w*.50;
+    const right = cx + w*.50;
+    const s = squish;
+    ctx.beginPath();
+    ctx.moveTo(cx, top - 3*s);
+    ctx.bezierCurveTo(cx - w*.39, top + h*.01, left - 8*s, cy - h*.13, left + w*.045, cy + h*.20);
+    ctx.bezierCurveTo(left + w*.03, cy + h*.35, left + w*.10, bottom - h*.08, left + w*.18, bottom - 8);
+    ctx.quadraticCurveTo(left + w*.25, bottom + 8 + s, left + w*.34, bottom - 5);
+    ctx.quadraticCurveTo(left + w*.42, bottom + 13 - s, left + w*.52, bottom - 2);
+    ctx.quadraticCurveTo(left + w*.61, bottom + 10 + s, left + w*.72, bottom - 7);
+    ctx.quadraticCurveTo(left + w*.83, bottom + 7 - s, right - w*.16, bottom - 4);
+    ctx.bezierCurveTo(right - w*.05, bottom - h*.09, right - w*.02, cy + h*.38, right - w*.045, cy + h*.20);
+    ctx.bezierCurveTo(right + 10*s, cy - h*.12, cx + w*.40, top + h*.02, cx, top - 3*s);
+    ctx.closePath();
+  }
+
+  function drawEye(x, y, w, h, tilt, color, glob, look, lidExtra){
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+    ctx.fillStyle = '#ded39a';
+    ctx.strokeStyle = 'rgba(48,38,18,.55)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#3c2915';
+    ctx.beginPath();
+    ctx.ellipse(look.x, look.y, glob.pupilSize*.78, glob.pupilSize*1.08, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.globalAlpha = .22;
+    ctx.fillStyle = '#fff6bd';
+    ctx.beginPath();
+    ctx.ellipse(-w*.11, -h*.12, w*.18, h*.10, -.25, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    const lidCap = glob.ageYears >= 140 ? .92 : glob.ageYears >= 110 ? .86 : glob.ageYears >= 90 ? .70 : glob.ageYears >= 80 ? .48 : glob.ageYears >= 70 ? .34 : .20;
+    const cover = clamp(glob.eyelid + lidExtra, .04, lidCap);
+    ctx.fillStyle = color.base;
+    ctx.strokeStyle = color.shadow;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(-w*.58, -h*.58);
+    ctx.lineTo(w*.58, -h*.58);
+    ctx.lineTo(w*.58, -h*.42 + h*cover);
+    ctx.quadraticCurveTo(0, -h*.13 + h*cover, -w*.58, -h*.42 + h*cover);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(0, h*.40, w*.42, h*.08, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawMouth(cx, y, w, glob, t){
+    const color = glob.color;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = color.dark;
+    ctx.lineWidth = 6;
+    ctx.globalAlpha = .62;
+    ctx.beginPath();
+    const mood = glob.mouth;
+    if(mood === 0){
+      ctx.moveTo(cx-w*.45,y); ctx.quadraticCurveTo(cx, y+w*.11, cx+w*.45,y-2);
+    } else if(mood === 1){
+      ctx.moveTo(cx-w*.38,y+8); ctx.quadraticCurveTo(cx, y-w*.09, cx+w*.38,y+8);
+    } else if(mood === 2){
+      ctx.moveTo(cx-w*.42,y+3); ctx.quadraticCurveTo(cx-w*.04, y+w*.16, cx+w*.38,y-5);
+    } else if(mood === 3){
+      ctx.moveTo(cx-w*.35,y); ctx.quadraticCurveTo(cx, y+w*.04, cx+w*.35,y);
+      ctx.stroke();
+      ctx.globalAlpha = .68;
+      ctx.fillStyle = '#23170e';
+      ctx.beginPath();
+      ctx.ellipse(cx+4, y+14, w*.13, 8+Math.sin(t*2)*1.5, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    } else if(mood === 4){
+      ctx.moveTo(cx-w*.35,y+1); ctx.lineTo(cx+w*.35,y+1);
+    } else if(mood === 5){
+      ctx.moveTo(cx-w*.30,y+8); ctx.quadraticCurveTo(cx+w*.08, y-w*.08, cx+w*.38,y+2);
+    } else {
+      ctx.moveTo(cx-w*.38,y-2); ctx.quadraticCurveTo(cx, y+w*.13, cx+w*.32,y+3);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    if(glob.tooth){
+      ctx.fillStyle = '#efe1aa';
+      ctx.strokeStyle = 'rgba(58,42,22,.45)';
+      ctx.lineWidth = 1.5;
+      roundedRect(ctx, cx-8, y+5, 15, 19, 4);
+      ctx.fill(); ctx.stroke();
+      if(glob.tooth2){
+        roundedRect(ctx, cx+11, y+4, 12, 16, 3);
+        ctx.fill(); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawGlob(glob, now){
+    const t = now / 1000;
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    const bg = ctx.createRadialGradient(W*.5, H*.43, 30, W*.5, H*.48, W*.78);
+    bg.addColorStop(0, '#151a0d');
+    bg.addColorStop(.55, '#050704');
+    bg.addColorStop(1, '#000');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    ctx.globalAlpha = .16;
+    for(let i=0;i<18;i++){
+      const r = 20 + ((glob.seed>>>(i%12)) % 80);
+      ctx.fillStyle = i % 2 ? '#1f2615' : '#0e1409';
+      ctx.beginPath();
+      ctx.ellipse((i*97 + glob.seed%233)%W, (i*61 + glob.seed%311)%H, r*1.2, r*.38, (i*.7)%Math.PI, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    pokePower *= .92;
+    const wob = Math.sin(t * glob.wobbleSpeed * 4) * 7 * pokePower;
+    const breathe = Math.sin(t * 1.2) * 3;
+    const squish = Math.sin(t * 8 + glob.seed) * pokePower * 5;
+    const cx = W*.5 + wob + Math.sin(t*.55 + glob.seed)*3;
+    const cy = H*.56 + breathe + pokePower*12;
+    const w = glob.bodyW + pokePower*35;
+    const h = glob.bodyH - pokePower*22;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(glob.lean + wob*.002);
+    ctx.translate(-cx, -cy);
+
+    drawArm('left', cx, cy, w, h, glob.color, t, glob);
+    drawArm('right', cx, cy, w, h, glob.color, t, glob);
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.7)';
+    ctx.shadowBlur = 25;
+    ctx.shadowOffsetY = 18;
+    bodyPath(ctx, cx, cy, w, h, squish, glob.lean);
+    const grad = ctx.createRadialGradient(cx-w*.16, cy-h*.35, 20, cx, cy, h*.72);
+    grad.addColorStop(0, glob.color.hi);
+    grad.addColorStop(.48, glob.color.base);
+    grad.addColorStop(1, glob.color.shadow);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+
+    bodyPath(ctx, cx, cy, w, h, squish, glob.lean);
+    ctx.save();
+    ctx.clip();
+
+    ctx.globalAlpha = .20;
+    const glow = ctx.createRadialGradient(cx-w*.22, cy-h*.32, 2, cx-w*.22, cy-h*.32, w*.42);
+    glow.addColorStop(0, '#fff7ba');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(cx-w*.5, cy-h*.55, w, h);
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = glob.color.ghost;
+    ctx.lineWidth = 2.5;
+    for(let i=0;i<glob.texture.length;i++){
+      const p = glob.texture[i];
+      ctx.globalAlpha = p.a;
+      ctx.save();
+      ctx.translate(cx + (p.x-.5)*w*.70, cy - h*.35 + p.y*h*.50);
+      ctx.rotate(p.rot + Math.sin(t*.3+i)*.02);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, w*p.w*.28, 8 + p.curve*12, 0, Math.PI*.1, Math.PI*.88);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+
+    for(let i=0;i<glob.wrinkle;i++){
+      const yy = cy - h*.38 + i*15 + Math.sin(t+i)*1.2;
+      const ww = w * (.18 + i*.025);
+      ctx.strokeStyle = hsla(glob.hue, glob.sat + 4, glob.light - 18, .20 - i*.008);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.sin(i*11)*8, yy, ww, 8 + i*.5, Math.sin(i)*.08, Math.PI*.08, Math.PI*.92);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = .23;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + h*.48, w*.43, h*.045, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    const faceY = cy - h*.03 + glob.eyeYShift;
+    const lookDX = pointer.active ? clamp((pointer.x - cx) / 95, -6, 6) : Math.sin(t*.7)*2;
+    const lookDY = pointer.active ? clamp((pointer.y - faceY) / 130, -3, 4) : 1.5 + Math.cos(t*.6)*1;
+    let tiltL = -.05, tiltR = .05, lidL = 0, lidR = 0, eyeYOffsetL = 0, eyeYOffsetR = 0;
+    switch(glob.face){
+      case 1: tiltL = .08; tiltR = -.08; lidL=.1; break;
+      case 2: eyeYOffsetL=-4; eyeYOffsetR=3; lidR=.12; break;
+      case 3: tiltL=-.18; tiltR=-.03; lidL=.16; lidR=.05; break;
+      case 4: tiltL=.18; tiltR=.18; lidL=.08; lidR=.08; break;
+      case 5: eyeYOffsetL=3; eyeYOffsetR=3; lidL=.24; lidR=.24; break;
+      case 6: tiltL=-.12; tiltR=.13; lidL=.01; lidR=.18; break;
+      case 7: eyeYOffsetL=-3; eyeYOffsetR=-3; lidL=.18; lidR=.0; break;
+    }
+    if(glob.ageYears < 70){ lidL *= .18; lidR *= .18; }
+    else if(glob.ageYears < 90){ lidL *= .44; lidR *= .44; }
+    else if(glob.ageYears < 110){ lidL *= .70; lidR *= .70; }
+    const eyeGap = glob.eyeGap;
+    drawEye(cx - eyeGap/2, faceY + eyeYOffsetL, glob.eyeW, glob.eyeH, tiltL, glob.color, glob, {x:lookDX, y:lookDY}, lidL);
+    drawEye(cx + eyeGap/2, faceY + eyeYOffsetR, glob.eyeW, glob.eyeH, tiltR, glob.color, glob, {x:lookDX, y:lookDY}, lidR);
+
+    drawMouth(cx, faceY + h*.16, 112, glob, t);
+
+    ctx.save();
+    ctx.strokeStyle = hsla(glob.hue, glob.sat+4, glob.light-25, .38);
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(cx - w*.34, cy + h*.32);
+    ctx.quadraticCurveTo(cx - w*.2, cy + h*.39, cx - w*.04, cy + h*.35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + w*.09, cy + h*.36);
+    ctx.quadraticCurveTo(cx + w*.23, cy + h*.42, cx + w*.37, cy + h*.34);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function loop(now){
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+    if(currentGlob) drawGlob(currentGlob, now);
+    requestAnimationFrame(loop);
+  }
+
+  function showSpeech(text){
+    elSpeech.textContent = text;
+    elSpeech.classList.add('show');
+    clearTimeout(showSpeech._timer);
+    showSpeech._timer = setTimeout(() => elSpeech.classList.remove('show'), 950);
+  }
+
+  function canvasPoint(evt){
+    const rect = canvas.getBoundingClientRect();
+    const e = evt.touches ? evt.touches[0] : evt;
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+
+  function setupTapSfx(){
+    if(!tapAudio) return;
+    tapAudio.src = SFX_FILE;
+    tapAudio.preload = 'auto';
+    tapAudio.load();
+
+    // A tiny pool lets long custom sounds, like screams, overlap instead of
+    // getting chopped off by the next tap.
+    for(let i = 0; i < 5; i++){
+      const a = new Audio(SFX_FILE);
+      a.preload = 'auto';
+      sfxPool.push(a);
+    }
+  }
+
+  function playTapSfx(){
+    if(!sfxPool.length) return;
+    const sound = sfxPool[sfxIndex % sfxPool.length];
+    sfxIndex++;
+    try{
+      sound.pause();
+      sound.currentTime = 0;
+      const playPromise = sound.play();
+      if(playPromise && playPromise.catch) playPromise.catch(() => {});
+    }catch(err){
+      // No fake click fallback. If glob_poke.wav is missing or blocked, stay silent
+      // so replacing the file never gets masked by the old synthesized tap sound.
+    }
+  }
+
+  setupTapSfx();
+
+  function poke(evt){
+    const nowMs = performance.now();
+    if(nowMs - lastPokeAt < 45) return;
+    lastPokeAt = nowMs;
+    playTapSfx();
+    const p = canvasPoint(evt);
+    pointer = { ...p, active: true };
+    pokePower = Math.min(1, pokePower + .48);
+    if(currentGlob){
+      const rng = mulberry32(currentGlob.seed ^ Math.floor(performance.now()));
+      showSpeech(choice(QUIPS, rng));
+    }
+  }
+
+  canvas.addEventListener('pointermove', evt => { pointer = { ...canvasPoint(evt), active: true }; });
+  canvas.addEventListener('pointerleave', () => { pointer.active = false; });
+  canvas.addEventListener('pointerdown', poke);
+  canvas.addEventListener('touchstart', evt => { poke(evt); }, { passive: true });
+
+  document.getElementById('makeBtn').addEventListener('click', () => { regenerateSalt = 0; makeGlob(); showSpeech('generated.'); });
+  document.getElementById('regenBtn').addEventListener('click', () => {
+    regenerateSalt = (Math.max(0, Math.floor(Number(regenerateSalt) || 0)) + 1) % 1000000;
+    makeGlob();
+    showSpeech('regenerated.');
+  });
+  [elYear, elMonth, elDay, elGender].forEach(el => el.addEventListener('change', () => { regenerateSalt = 0; makeGlob(); }));
+
+  document.getElementById('pngBtn').addEventListener('click', () => {
+    if(!currentGlob) makeGlob();
+    const link = document.createElement('a');
+    link.download = currentGlob.name.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  function loadCollection(){
+    try{ return JSON.parse(localStorage.getItem('interactiveGlobCollection') || '[]'); }
+    catch{ return []; }
+  }
+  function saveCollection(list){ localStorage.setItem('interactiveGlobCollection', JSON.stringify(list.slice(0, 20))); }
+  function renderCollection(){
+    const list = loadCollection();
+    elCollection.innerHTML = '';
+    if(!list.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.textContent = 'No saved globs yet.';
+      elCollection.appendChild(empty);
+      return;
+    }
+    for(const item of list){
+      const row = document.createElement('div');
+      row.className = 'saved';
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = `hsl(${item.hue} ${item.sat}% ${item.light}%)`;
+      const name = document.createElement('span');
+      name.textContent = item.name;
+      const btn = document.createElement('button');
+      btn.className = 'iconBtn';
+      btn.textContent = 'load';
+      btn.addEventListener('click', () => {
+        elYear.value = item.y; elMonth.value = item.m; elDay.value = item.d;
+        if(elGender) elGender.value = item.genderChoice || 'random';
+        regenerateSalt = Math.max(0, Math.floor(Number(item.variant) || 0));
+        makeGlob(); showSpeech('loaded.');
+      });
+      row.append(swatch, name, btn);
+      elCollection.appendChild(row);
+    }
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    if(!currentGlob) makeGlob();
+    const { y, m, d } = normalizedDate();
+    const list = loadCollection().filter(item => item.seedString !== currentGlob.seedString);
+    list.unshift({ name: currentGlob.name, seedString: currentGlob.seedString, y, m, d, genderChoice: currentGlob.genderChoice, variant: currentGlob.variant || 0, hue: currentGlob.hue, sat: currentGlob.sat, light: currentGlob.light });
+    saveCollection(list);
+    renderCollection();
+    showSpeech('saved.');
+  });
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    localStorage.removeItem('interactiveGlobCollection');
+    renderCollection();
+    showSpeech('gone.');
+  });
+
+  async function boot(){
+    await loadNameBank();
+    makeGlob();
+    renderCollection();
+    requestAnimationFrame(loop);
+  }
+  boot();
+  </script>
+</body>
+</html>
