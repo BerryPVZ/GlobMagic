@@ -36,8 +36,12 @@
     label{display:block; margin:11px 0 6px; color:#d4d0a3; font-size:13px; font-weight:700;}
     input,select,button{font:inherit;}
     input,select{width:100%; border:1px solid #49513a; background:#0e110d; color:var(--text); border-radius:14px; padding:11px 12px; outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+    input[type="range"]{height:32px; padding:0 2px; accent-color:var(--button); background:transparent; border:0; box-shadow:none;}
+    input[type="color"]{height:42px; padding:4px; cursor:pointer;}
     input:focus,select:focus{border-color:#c5bd64; box-shadow:0 0 0 3px rgba(214,200,106,.14);}
     .row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px;}
+    .row.two{grid-template-columns:1fr 1fr;}
+    .rangeReadout{float:right; color:#f0dd72; font-weight:800;}
     .actions{display:grid; gap:9px; margin-top:13px;}
     button{border:0; border-radius:16px; padding:12px 13px; font-weight:800; color:var(--buttonText); background:linear-gradient(180deg, #f0dd72, var(--button)); box-shadow:0 7px 0 #817537, 0 16px 28px rgba(0,0,0,.28); cursor:pointer; transition:transform .08s, box-shadow .08s, filter .1s;}
     button:active{transform:translateY(5px); box-shadow:0 2px 0 #817537, 0 8px 18px rgba(0,0,0,.25);}
@@ -79,7 +83,7 @@
       <canvas id="globCanvas" width="900" height="680"></canvas>
       <audio id="tapSfx" src="glob_poke.wav" preload="auto"></audio>
       <div id="speech" class="bubble">brrrp.</div>
-      <div class="hint"><span>Tap / click the glob to annoy it.</span><span id="loadNote">loading names…</span></div>
+      <div class="hint"><span>Poke eyes, tap the glob, or drag and flick it off screen.</span><span id="loadNote">loading names…</span></div>
     </section>
 
     <aside class="panel">
@@ -113,6 +117,83 @@
         <button id="regenBtn" class="secondary">Regenerate glob</button>
         <button id="pngBtn" class="secondary">Download PNG</button>
         <button id="saveBtn" class="secondary">Save to collection</button>
+        <button id="resetStageBtn" class="secondary">Call glob back</button>
+      </div>
+
+      <div class="card">
+        <div class="sub">Manual glob lab</div>
+        <label for="manualName">Name override</label>
+        <input id="manualName" type="text" autocomplete="off" spellcheck="false" placeholder="Type a custom glob name" />
+        <div class="row">
+          <div>
+            <label for="manualHue">Hue <span id="manualHueOut" class="rangeReadout">0</span></label>
+            <input id="manualHue" type="range" min="0" max="359" value="90" />
+          </div>
+          <div>
+            <label for="manualSat">Slime <span id="manualSatOut" class="rangeReadout">50</span></label>
+            <input id="manualSat" type="range" min="20" max="88" value="50" />
+          </div>
+          <div class="fullSmall">
+            <label for="manualLight">Glow <span id="manualLightOut" class="rangeReadout">45</span></label>
+            <input id="manualLight" type="range" min="18" max="74" value="45" />
+          </div>
+        </div>
+        <div class="row two">
+          <div>
+            <label for="manualFace">Eye mood</label>
+            <select id="manualFace">
+              <option value="0">Default stare</option>
+              <option value="1">Suspicious</option>
+              <option value="2">Uneven blink</option>
+              <option value="3">Angry droop</option>
+              <option value="4">Shocked tilt</option>
+              <option value="5">Sleepy</option>
+              <option value="6">Side-eye</option>
+              <option value="7">Tired glare</option>
+            </select>
+          </div>
+          <div>
+            <label for="manualMouth">Mouth</label>
+            <select id="manualMouth">
+              <option value="0">Soft frown</option>
+              <option value="1">Tiny smile</option>
+              <option value="2">Crooked</option>
+              <option value="3">Open mumble</option>
+              <option value="4">Flat line</option>
+              <option value="5">Smirk</option>
+              <option value="6">Wobbly pout</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="manualEyeGap">Eye gap <span id="manualEyeGapOut" class="rangeReadout">90</span></label>
+            <input id="manualEyeGap" type="range" min="45" max="135" value="90" />
+          </div>
+          <div>
+            <label for="manualEyeSize">Eye size <span id="manualEyeSizeOut" class="rangeReadout">66</span></label>
+            <input id="manualEyeSize" type="range" min="38" max="104" value="66" />
+          </div>
+          <div class="fullSmall">
+            <label for="manualPupil">Pupil <span id="manualPupilOut" class="rangeReadout">10</span></label>
+            <input id="manualPupil" type="range" min="4" max="24" value="10" />
+          </div>
+        </div>
+        <div class="row two">
+          <div>
+            <label for="manualLid">Lid droop <span id="manualLidOut" class="rangeReadout">10</span></label>
+            <input id="manualLid" type="range" min="0" max="85" value="10" />
+          </div>
+          <div>
+            <label for="manualSize">Glob size <span id="manualSizeOut" class="rangeReadout">100</span></label>
+            <input id="manualSize" type="range" min="70" max="135" value="100" />
+          </div>
+        </div>
+        <div class="actions">
+          <button id="manualApplyBtn" class="secondary">Apply manual glob</button>
+          <button id="manualRandomBtn" class="secondary">Random manual parts</button>
+        </div>
+        <p class="mini">Manual edits keep the current birthday/name seed unless you type a custom name. Eye pokes squash only the clicked eye. Drag, release, and the glob keeps flying until you call it back.</p>
       </div>
 
       <div class="card" aria-live="polite">
@@ -142,6 +223,9 @@
   let regenerateSalt = 0;
   let pointer = { x: 0, y: 0, active: false };
   let pokePower = 0;
+  let eyePoke = { left: 0, right: 0 };
+  let lastGlobHitbox = null;
+  let lastEyeHitboxes = [];
   let lastTime = performance.now();
 
   const canvas = document.getElementById('globCanvas');
@@ -156,6 +240,27 @@
   const elSpeech = document.getElementById('speech');
   const elCollection = document.getElementById('collection');
   const elLoadNote = document.getElementById('loadNote');
+  const elManualName = document.getElementById('manualName');
+  const elManualHue = document.getElementById('manualHue');
+  const elManualSat = document.getElementById('manualSat');
+  const elManualLight = document.getElementById('manualLight');
+  const elManualFace = document.getElementById('manualFace');
+  const elManualMouth = document.getElementById('manualMouth');
+  const elManualEyeGap = document.getElementById('manualEyeGap');
+  const elManualEyeSize = document.getElementById('manualEyeSize');
+  const elManualPupil = document.getElementById('manualPupil');
+  const elManualLid = document.getElementById('manualLid');
+  const elManualSize = document.getElementById('manualSize');
+  const manualReadouts = {
+    manualHue: document.getElementById('manualHueOut'),
+    manualSat: document.getElementById('manualSatOut'),
+    manualLight: document.getElementById('manualLightOut'),
+    manualEyeGap: document.getElementById('manualEyeGapOut'),
+    manualEyeSize: document.getElementById('manualEyeSizeOut'),
+    manualPupil: document.getElementById('manualPupilOut'),
+    manualLid: document.getElementById('manualLidOut'),
+    manualSize: document.getElementById('manualSizeOut')
+  };
   const tapAudio = document.getElementById('tapSfx');
   const SFX_FILE = 'glob_poke.wav';
   const sfxPool = [];
@@ -241,6 +346,22 @@
   function hsl(h,s,l){ return `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`; }
   function hsla(h,s,l,a){ return `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}% / ${a})`; }
   function shade(color, delta){ return hsl(color.h, color.s, clamp(color.l + delta, 0, 100)); }
+
+  function makeColor(hue, sat, light){
+    hue = clamp(Math.round(Number(hue) || 0), 0, 359);
+    sat = clamp(Math.round(Number(sat) || 45), 20, 88);
+    light = clamp(Math.round(Number(light) || 44), 18, 74);
+    return {
+      h: hue,
+      s: sat,
+      l: light,
+      base: hsl(hue, sat, light),
+      hi: hsl(hue, Math.max(25, sat - 10), clamp(light + 16, 0, 86)),
+      shadow: hsl(hue, Math.min(75, sat + 8), clamp(light - 18, 0, 45)),
+      dark: hsl(hue, Math.min(75, sat + 12), clamp(light - 28, 0, 35)),
+      ghost: hsla(hue, sat, clamp(light + 22,0,90), .13)
+    };
+  }
 
   function modBig(n, d){
     return ((n % d) + d) % d;
@@ -392,16 +513,7 @@
     const hue = Math.floor((rng() * 360 + m * 31 + d * 13) % 360);
     const sat = 38 + Math.floor(rng() * 28);
     const light = 37 + Math.floor(rng() * 18);
-    const body = {
-      h: hue,
-      s: sat,
-      l: light,
-      base: hsl(hue, sat, light),
-      hi: hsl(hue, Math.max(25, sat - 10), clamp(light + 16, 0, 86)),
-      shadow: hsl(hue, Math.min(75, sat + 8), clamp(light - 18, 0, 45)),
-      dark: hsl(hue, Math.min(75, sat + 12), clamp(light - 28, 0, 35)),
-      ghost: hsla(hue, sat, clamp(light + 22,0,90), .13)
-    };
+    const body = makeColor(hue, sat, light);
 
     const texture = [];
     for(let i=0;i<26;i++){
@@ -447,9 +559,156 @@
     };
 
     currentGlob = glob;
+    resetGlobMotion(glob);
+    setManualControlsFromGlob(glob);
     pokePower = .4;
     updateInfo();
     return glob;
+  }
+
+  function resetGlobMotion(glob){
+    glob = glob || currentGlob;
+    if(!glob) return;
+    glob.x = canvas.width * .5;
+    glob.y = canvas.height * .56;
+    glob.vx = 0;
+    glob.vy = 0;
+    glob.rot = 0;
+    glob.vr = 0;
+    glob.dragging = false;
+    glob.dragOffsetX = 0;
+    glob.dragOffsetY = 0;
+  }
+
+  function updateGlobPhysics(glob, dt){
+    if(!glob) return;
+    eyePoke.left *= Math.pow(.84, dt * 60);
+    eyePoke.right *= Math.pow(.84, dt * 60);
+    if(glob.dragging) return;
+
+    glob.x = Number.isFinite(glob.x) ? glob.x : canvas.width * .5;
+    glob.y = Number.isFinite(glob.y) ? glob.y : canvas.height * .56;
+    glob.vx = Number.isFinite(glob.vx) ? glob.vx : 0;
+    glob.vy = Number.isFinite(glob.vy) ? glob.vy : 0;
+    glob.rot = Number.isFinite(glob.rot) ? glob.rot : 0;
+    glob.vr = Number.isFinite(glob.vr) ? glob.vr : 0;
+
+    glob.x += glob.vx * dt;
+    glob.y += glob.vy * dt;
+    glob.rot += glob.vr * dt;
+
+    const drag = Math.pow(.989, dt * 60);
+    glob.vx *= drag;
+    glob.vy *= drag;
+    glob.vr *= Math.pow(.975, dt * 60);
+
+    if(Math.abs(glob.vx) < .05) glob.vx = 0;
+    if(Math.abs(glob.vy) < .05) glob.vy = 0;
+    if(Math.abs(glob.vr) < .001) glob.vr = 0;
+  }
+
+  function syncManualReadouts(){
+    const pairs = [
+      [elManualHue, manualReadouts.manualHue],
+      [elManualSat, manualReadouts.manualSat],
+      [elManualLight, manualReadouts.manualLight],
+      [elManualEyeGap, manualReadouts.manualEyeGap],
+      [elManualEyeSize, manualReadouts.manualEyeSize],
+      [elManualPupil, manualReadouts.manualPupil],
+      [elManualLid, manualReadouts.manualLid],
+      [elManualSize, manualReadouts.manualSize]
+    ];
+    for(const [input, out] of pairs){
+      if(input && out) out.textContent = input.value;
+    }
+  }
+
+  function setManualControlsFromGlob(glob){
+    if(!glob) return;
+    if(elManualName) elManualName.value = glob.manual ? glob.name : '';
+    if(elManualHue) elManualHue.value = Math.round(glob.hue);
+    if(elManualSat) elManualSat.value = Math.round(glob.sat);
+    if(elManualLight) elManualLight.value = Math.round(glob.light);
+    if(elManualFace) elManualFace.value = String(glob.face || 0);
+    if(elManualMouth) elManualMouth.value = String(glob.mouth || 0);
+    if(elManualEyeGap) elManualEyeGap.value = Math.round(glob.eyeGap || 90);
+    if(elManualEyeSize) elManualEyeSize.value = Math.round(glob.eyeW || 66);
+    if(elManualPupil) elManualPupil.value = Math.round(glob.pupilSize || 10);
+    if(elManualLid) elManualLid.value = Math.round(clamp((glob.eyelid || 0) * 100, 0, 85));
+    if(elManualSize) elManualSize.value = Math.round(clamp((glob.bodyW || 360) / 3.6, 70, 135));
+    syncManualReadouts();
+  }
+
+  function applyManualGlob(){
+    if(!currentGlob) makeGlob();
+    const glob = currentGlob;
+    const hue = clamp(parseInt(elManualHue && elManualHue.value, 10) || glob.hue || 0, 0, 359);
+    const sat = clamp(parseInt(elManualSat && elManualSat.value, 10) || glob.sat || 50, 20, 88);
+    const light = clamp(parseInt(elManualLight && elManualLight.value, 10) || glob.light || 45, 18, 74);
+    const eyeSize = clamp(parseInt(elManualEyeSize && elManualEyeSize.value, 10) || glob.eyeW || 66, 38, 104);
+    const size = clamp(parseInt(elManualSize && elManualSize.value, 10) || 100, 70, 135) / 100;
+
+    glob.manual = true;
+    glob.name = (elManualName && elManualName.value.trim()) || glob.name;
+    glob.hue = hue;
+    glob.sat = sat;
+    glob.light = light;
+    glob.color = makeColor(hue, sat, light);
+    glob.face = clamp(parseInt(elManualFace && elManualFace.value, 10) || 0, 0, 7);
+    glob.mouth = clamp(parseInt(elManualMouth && elManualMouth.value, 10) || 0, 0, 6);
+    glob.eyeGap = clamp(parseInt(elManualEyeGap && elManualEyeGap.value, 10) || glob.eyeGap || 90, 45, 135);
+    glob.eyeW = eyeSize;
+    glob.eyeH = clamp(Math.round(eyeSize * .56), 24, 62);
+    glob.pupilSize = clamp(parseInt(elManualPupil && elManualPupil.value, 10) || glob.pupilSize || 10, 4, 24);
+    glob.eyelid = clamp((parseInt(elManualLid && elManualLid.value, 10) || 0) / 100, 0, .85);
+    glob.bodyW = 370 * size;
+    glob.bodyH = 420 * size;
+    glob.mood = 'manually sculpted and mildly offended';
+    if(!glob.traits || glob.traits.length < 2) glob.traits = ['Custom', 'Glob'];
+    glob.traits[0] = 'Manual';
+    glob.traits[1] = 'Sculpt';
+    syncManualReadouts();
+    updateInfo();
+    showSpeech('manualized.');
+  }
+
+  function randomizeManualGlob(){
+    if(!currentGlob) makeGlob();
+    const rng = mulberry32((performance.now() | 0) ^ currentGlob.seed);
+    if(elManualHue) elManualHue.value = Math.floor(rng() * 360);
+    if(elManualSat) elManualSat.value = 28 + Math.floor(rng() * 58);
+    if(elManualLight) elManualLight.value = 24 + Math.floor(rng() * 44);
+    if(elManualFace) elManualFace.value = String(Math.floor(rng() * 8));
+    if(elManualMouth) elManualMouth.value = String(Math.floor(rng() * 7));
+    if(elManualEyeGap) elManualEyeGap.value = 45 + Math.floor(rng() * 91);
+    if(elManualEyeSize) elManualEyeSize.value = 38 + Math.floor(rng() * 67);
+    if(elManualPupil) elManualPupil.value = 4 + Math.floor(rng() * 21);
+    if(elManualLid) elManualLid.value = Math.floor(rng() * 76);
+    if(elManualSize) elManualSize.value = 70 + Math.floor(rng() * 66);
+    syncManualReadouts();
+    applyManualGlob();
+  }
+
+  function hitRotatedEllipse(point, hitbox){
+    if(!point || !hitbox) return false;
+    const dx = point.x - hitbox.x;
+    const dy = point.y - hitbox.y;
+    const cos = Math.cos(-(hitbox.rot || 0));
+    const sin = Math.sin(-(hitbox.rot || 0));
+    const lx = dx * cos - dy * sin;
+    const ly = dx * sin + dy * cos;
+    return ((lx * lx) / (hitbox.rx * hitbox.rx)) + ((ly * ly) / (hitbox.ry * hitbox.ry)) <= 1;
+  }
+
+  function eyeAtPoint(point){
+    for(const eye of lastEyeHitboxes){
+      if(hitRotatedEllipse(point, eye)) return eye;
+    }
+    return null;
+  }
+
+  function globAtPoint(point){
+    return hitRotatedEllipse(point, lastGlobHitbox);
   }
 
   function updateInfo(){
@@ -460,7 +719,8 @@
     const genderChip = currentGlob.nameStyle === 'first_female' ? 'Female name list' : 'Male name list';
     const variantChip = currentGlob.variant ? `Variant ${currentGlob.variant + 1}` : 'Base variant';
     const ageChip = currentGlob.ageYears >= 140 ? 'Fossil lids' : currentGlob.ageYears >= 90 ? 'Ancient lids' : currentGlob.ageYears >= 70 ? 'Older lids' : currentGlob.ageYears < 0 ? 'Future glob' : 'Clear eyes';
-    const chipData = [...currentGlob.traits, genderChip, variantChip, ageChip, `Face ${currentGlob.face + 1}`, `Color ${Math.round(currentGlob.hue)}°`];
+    const manualChip = currentGlob.manual ? 'Manual glob' : 'Birthday glob';
+    const chipData = [...currentGlob.traits, manualChip, genderChip, variantChip, ageChip, `Face ${currentGlob.face + 1}`, `Color ${Math.round(currentGlob.hue)}°`];
     for(const text of chipData){
       const chip = document.createElement('span');
       chip.className = 'chip';
@@ -541,48 +801,61 @@
     ctx.closePath();
   }
 
-  function drawEye(x, y, w, h, tilt, color, glob, look, lidExtra){
+  function drawEye(x, y, w, h, tilt, color, glob, look, lidExtra, eyeReact){
+    const poke = clamp(eyeReact || 0, 0, 1);
+    const eyeW = w * (1 + poke * .10);
+    const eyeH = h * (1 - poke * .38);
+    const pupil = glob.pupilSize * (1 + poke * .75);
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(tilt);
-    ctx.fillStyle = '#ded39a';
+    ctx.rotate(tilt + Math.sin(performance.now() * .035) * poke * .03);
+    ctx.fillStyle = poke > .05 ? '#f2e5a9' : '#ded39a';
     ctx.strokeStyle = 'rgba(48,38,18,.55)';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 + poke * 2;
     ctx.beginPath();
-    ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+    ctx.ellipse(0, 0, eyeW/2, eyeH/2, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#3c2915';
     ctx.beginPath();
-    ctx.ellipse(look.x, look.y, glob.pupilSize*.78, glob.pupilSize*1.08, 0, 0, Math.PI*2);
+    ctx.ellipse(look.x * (1 + poke * .4), look.y, pupil*.78, pupil*1.08, 0, 0, Math.PI*2);
     ctx.fill();
 
-    ctx.globalAlpha = .22;
+    ctx.globalAlpha = .22 + poke * .16;
     ctx.fillStyle = '#fff6bd';
     ctx.beginPath();
-    ctx.ellipse(-w*.11, -h*.12, w*.18, h*.10, -.25, 0, Math.PI*2);
+    ctx.ellipse(-eyeW*.11, -eyeH*.12, eyeW*.18, eyeH*.10, -.25, 0, Math.PI*2);
     ctx.fill();
     ctx.globalAlpha = 1;
 
     const lidCap = glob.ageYears >= 140 ? .92 : glob.ageYears >= 110 ? .86 : glob.ageYears >= 90 ? .70 : glob.ageYears >= 80 ? .48 : glob.ageYears >= 70 ? .34 : .20;
-    const cover = clamp(glob.eyelid + lidExtra, .04, lidCap);
+    const cover = clamp(glob.eyelid + lidExtra + poke * .16, .04, Math.max(lidCap, .36));
     ctx.fillStyle = color.base;
     ctx.strokeStyle = color.shadow;
     ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.moveTo(-w*.58, -h*.58);
-    ctx.lineTo(w*.58, -h*.58);
-    ctx.lineTo(w*.58, -h*.42 + h*cover);
-    ctx.quadraticCurveTo(0, -h*.13 + h*cover, -w*.58, -h*.42 + h*cover);
+    ctx.moveTo(-eyeW*.58, -eyeH*.58);
+    ctx.lineTo(eyeW*.58, -eyeH*.58);
+    ctx.lineTo(eyeW*.58, -eyeH*.42 + eyeH*cover);
+    ctx.quadraticCurveTo(0, -eyeH*.13 + eyeH*cover, -eyeW*.58, -eyeH*.42 + eyeH*cover);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
+    if(poke > .08){
+      ctx.globalAlpha = poke * .32;
+      ctx.strokeStyle = '#fff4bf';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, eyeW*.60, eyeH*.60, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
     ctx.globalAlpha = .18;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(0, h*.40, w*.42, h*.08, 0, 0, Math.PI*2);
+    ctx.ellipse(0, eyeH*.40, eyeW*.42, eyeH*.08, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.restore();
     ctx.globalAlpha = 1;
@@ -665,14 +938,19 @@
     const wob = Math.sin(t * glob.wobbleSpeed * 4) * 7 * pokePower;
     const breathe = Math.sin(t * 1.2) * 3;
     const squish = Math.sin(t * 8 + glob.seed) * pokePower * 5;
-    const cx = W*.5 + wob + Math.sin(t*.55 + glob.seed)*3;
-    const cy = H*.56 + breathe + pokePower*12;
+    glob.x = Number.isFinite(glob.x) ? glob.x : W*.5;
+    glob.y = Number.isFinite(glob.y) ? glob.y : H*.56;
+    const cx = glob.x + wob + Math.sin(t*.55 + glob.seed)*3;
+    const cy = glob.y + breathe + pokePower*12;
     const w = glob.bodyW + pokePower*35;
     const h = glob.bodyH - pokePower*22;
+    const drawRot = glob.lean + (glob.rot || 0) + wob*.002;
+
+    lastGlobHitbox = { x: cx, y: cy, rx: w * .56, ry: h * .55, rot: drawRot };
 
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(glob.lean + wob*.002);
+    ctx.rotate(drawRot);
     ctx.translate(-cx, -cy);
 
     drawArm('left', cx, cy, w, h, glob.color, t, glob);
@@ -755,8 +1033,11 @@
     else if(glob.ageYears < 90){ lidL *= .44; lidR *= .44; }
     else if(glob.ageYears < 110){ lidL *= .70; lidR *= .70; }
     const eyeGap = glob.eyeGap;
-    drawEye(cx - eyeGap/2, faceY + eyeYOffsetL, glob.eyeW, glob.eyeH, tiltL, glob.color, glob, {x:lookDX, y:lookDY}, lidL);
-    drawEye(cx + eyeGap/2, faceY + eyeYOffsetR, glob.eyeW, glob.eyeH, tiltR, glob.color, glob, {x:lookDX, y:lookDY}, lidR);
+    const leftEye = { side: 'left', x: cx - eyeGap/2, y: faceY + eyeYOffsetL, rx: glob.eyeW * .60, ry: glob.eyeH * .72, rot: drawRot + tiltL };
+    const rightEye = { side: 'right', x: cx + eyeGap/2, y: faceY + eyeYOffsetR, rx: glob.eyeW * .60, ry: glob.eyeH * .72, rot: drawRot + tiltR };
+    lastEyeHitboxes = [leftEye, rightEye];
+    drawEye(leftEye.x, leftEye.y, glob.eyeW, glob.eyeH, tiltL, glob.color, glob, {x:lookDX, y:lookDY}, lidL, eyePoke.left);
+    drawEye(rightEye.x, rightEye.y, glob.eyeW, glob.eyeH, tiltR, glob.color, glob, {x:lookDX, y:lookDY}, lidR, eyePoke.right);
 
     drawMouth(cx, faceY + h*.16, 112, glob, t);
 
@@ -779,7 +1060,10 @@
   function loop(now){
     const dt = Math.min(0.05, (now - lastTime) / 1000);
     lastTime = now;
-    if(currentGlob) drawGlob(currentGlob, now);
+    if(currentGlob){
+      updateGlobPhysics(currentGlob, dt);
+      drawGlob(currentGlob, now);
+    }
     requestAnimationFrame(loop);
   }
 
@@ -832,24 +1116,97 @@
 
   setupTapSfx();
 
-  function poke(evt){
+  function pokeGlob(point, force){
     const nowMs = performance.now();
-    if(nowMs - lastPokeAt < 45) return;
+    if(nowMs - lastPokeAt < 45) return false;
     lastPokeAt = nowMs;
     playTapSfx();
-    const p = canvasPoint(evt);
-    pointer = { ...p, active: true };
-    pokePower = Math.min(1, pokePower + .48);
+    pointer = { ...point, active: true };
+    pokePower = Math.min(1, pokePower + (force || .48));
     if(currentGlob){
       const rng = mulberry32(currentGlob.seed ^ Math.floor(performance.now()));
       showSpeech(choice(QUIPS, rng));
     }
+    return true;
   }
 
-  canvas.addEventListener('pointermove', evt => { pointer = { ...canvasPoint(evt), active: true }; });
-  canvas.addEventListener('pointerleave', () => { pointer.active = false; });
-  canvas.addEventListener('pointerdown', poke);
-  canvas.addEventListener('touchstart', evt => { poke(evt); }, { passive: true });
+  function handlePointerDown(evt){
+    if(!currentGlob) makeGlob();
+    const p = canvasPoint(evt);
+    pointer = { ...p, active: true };
+    if(canvas.setPointerCapture && evt.pointerId !== undefined){
+      try{ canvas.setPointerCapture(evt.pointerId); }catch(err){}
+    }
+
+    const eye = eyeAtPoint(p);
+    if(eye){
+      pokeGlob(p, .34);
+      eyePoke[eye.side] = 1;
+      if(currentGlob){
+        currentGlob.vx = (currentGlob.vx || 0) + (eye.side === 'left' ? 120 : -120);
+        currentGlob.vr = (currentGlob.vr || 0) + (eye.side === 'left' ? .55 : -.55);
+      }
+      showSpeech(eye.side === 'left' ? 'left eye. rude.' : 'right eye. rude.');
+      evt.preventDefault();
+      return;
+    }
+
+    if(globAtPoint(p)){
+      pokeGlob(p, .24);
+      currentGlob.dragging = true;
+      currentGlob.dragOffsetX = p.x - currentGlob.x;
+      currentGlob.dragOffsetY = p.y - currentGlob.y;
+      currentGlob.lastDragX = p.x;
+      currentGlob.lastDragY = p.y;
+      currentGlob.lastDragTime = performance.now();
+      currentGlob.vx = 0;
+      currentGlob.vy = 0;
+      currentGlob.vr = 0;
+      showSpeech('grabbed.');
+      evt.preventDefault();
+    }
+  }
+
+  function handlePointerMove(evt){
+    const p = canvasPoint(evt);
+    pointer = { ...p, active: true };
+    if(currentGlob && currentGlob.dragging){
+      const nowMs = performance.now();
+      const dt = Math.max(.001, (nowMs - (currentGlob.lastDragTime || nowMs)) / 1000);
+      const nextX = p.x - currentGlob.dragOffsetX;
+      const nextY = p.y - currentGlob.dragOffsetY;
+      currentGlob.vx = clamp((nextX - currentGlob.x) / dt, -2800, 2800);
+      currentGlob.vy = clamp((nextY - currentGlob.y) / dt, -2800, 2800);
+      currentGlob.vr = clamp(currentGlob.vx / 420 + (p.y - currentGlob.lastDragY) / 160, -8, 8);
+      currentGlob.x = nextX;
+      currentGlob.y = nextY;
+      currentGlob.lastDragX = p.x;
+      currentGlob.lastDragY = p.y;
+      currentGlob.lastDragTime = nowMs;
+      pokePower = Math.max(pokePower, .16);
+      evt.preventDefault();
+    }
+  }
+
+  function handlePointerUp(evt){
+    if(currentGlob && currentGlob.dragging){
+      currentGlob.dragging = false;
+      currentGlob.vx = clamp(currentGlob.vx || 0, -3200, 3200);
+      currentGlob.vy = clamp(currentGlob.vy || 0, -3200, 3200);
+      currentGlob.vr = clamp(currentGlob.vr || 0, -10, 10);
+      showSpeech(Math.abs(currentGlob.vx) + Math.abs(currentGlob.vy) > 900 ? 'launched.' : 'dropped.');
+    }
+    pointer.active = false;
+    if(canvas.releasePointerCapture && evt.pointerId !== undefined){
+      try{ canvas.releasePointerCapture(evt.pointerId); }catch(err){}
+    }
+  }
+
+  canvas.addEventListener('pointermove', handlePointerMove);
+  canvas.addEventListener('pointerleave', () => { if(!currentGlob || !currentGlob.dragging) pointer.active = false; });
+  canvas.addEventListener('pointerdown', handlePointerDown);
+  canvas.addEventListener('pointerup', handlePointerUp);
+  canvas.addEventListener('pointercancel', handlePointerUp);
 
   document.getElementById('makeBtn').addEventListener('click', () => { regenerateSalt = 0; makeGlob(); showSpeech('generated.'); });
   document.getElementById('regenBtn').addEventListener('click', () => {
@@ -858,6 +1215,16 @@
     showSpeech('regenerated.');
   });
   [elYear, elMonth, elDay, elGender].forEach(el => el.addEventListener('change', () => { regenerateSalt = 0; makeGlob(); }));
+
+  [elManualHue, elManualSat, elManualLight, elManualEyeGap, elManualEyeSize, elManualPupil, elManualLid, elManualSize].forEach(el => {
+    if(el) el.addEventListener('input', syncManualReadouts);
+  });
+  const manualApplyBtn = document.getElementById('manualApplyBtn');
+  const manualRandomBtn = document.getElementById('manualRandomBtn');
+  const resetStageBtn = document.getElementById('resetStageBtn');
+  if(manualApplyBtn) manualApplyBtn.addEventListener('click', applyManualGlob);
+  if(manualRandomBtn) manualRandomBtn.addEventListener('click', randomizeManualGlob);
+  if(resetStageBtn) resetStageBtn.addEventListener('click', () => { resetGlobMotion(); pokePower = .25; showSpeech('back.'); });
 
   document.getElementById('pngBtn').addEventListener('click', () => {
     if(!currentGlob) makeGlob();
